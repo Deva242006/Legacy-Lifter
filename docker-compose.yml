@@ -1,0 +1,111 @@
+# =====================================================
+# LegacyLifter — Production Docker Compose
+# =====================================================
+# Usage: docker-compose up -d
+
+services:
+  # ---- Backend API ----
+  backend:
+    build:
+      context: ./backend
+      dockerfile: Dockerfile
+    container_name: ll-backend
+    environment:
+      SPRING_PROFILES_ACTIVE: prod
+      DATABASE_URL: jdbc:postgresql://postgres:5432/legacylifter
+      DATABASE_USERNAME: legacylifter
+      DATABASE_PASSWORD: ${DB_PASSWORD:-legacylifter_prod}
+      REDIS_HOST: redis
+      KAFKA_BOOTSTRAP_SERVERS: kafka:9092
+      OPENAI_API_KEY: ${OPENAI_API_KEY}
+    ports:
+      - "8080:8080"
+    depends_on:
+      postgres:
+        condition: service_healthy
+      redis:
+        condition: service_healthy
+    restart: unless-stopped
+
+  # ---- Frontend ----
+  frontend:
+    build:
+      context: ./frontend
+      dockerfile: Dockerfile
+    container_name: ll-frontend
+    environment:
+      VITE_API_URL: http://backend:8080
+    ports:
+      - "3000:80"
+    depends_on:
+      - backend
+    restart: unless-stopped
+
+  # ---- PostgreSQL ----
+  postgres:
+    image: pgvector/pgvector:pg16
+    container_name: ll-postgres
+    environment:
+      POSTGRES_DB: legacylifter
+      POSTGRES_USER: legacylifter
+      POSTGRES_PASSWORD: ${DB_PASSWORD:-legacylifter_prod}
+    volumes:
+      - ll_postgres_data:/var/lib/postgresql/data
+    healthcheck:
+      test: ["CMD-SHELL", "pg_isready -U legacylifter"]
+      interval: 10s
+      timeout: 5s
+      retries: 5
+    restart: unless-stopped
+
+  # ---- Redis ----
+  redis:
+    image: redis:7-alpine
+    container_name: ll-redis
+    volumes:
+      - ll_redis_data:/data
+    healthcheck:
+      test: ["CMD", "redis-cli", "ping"]
+      interval: 10s
+      timeout: 5s
+      retries: 5
+    restart: unless-stopped
+
+  # ---- Zookeeper ----
+  zookeeper:
+    image: confluentinc/cp-zookeeper:7.6.0
+    container_name: ll-zookeeper
+    environment:
+      ZOOKEEPER_CLIENT_PORT: 2181
+      ZOOKEEPER_TICK_TIME: 2000
+    restart: unless-stopped
+
+  # ---- Kafka ----
+  kafka:
+    image: confluentinc/cp-kafka:7.6.0
+    container_name: ll-kafka
+    depends_on:
+      - zookeeper
+    environment:
+      KAFKA_BROKER_ID: 1
+      KAFKA_ZOOKEEPER_CONNECT: zookeeper:2181
+      KAFKA_ADVERTISED_LISTENERS: PLAINTEXT://kafka:9092
+      KAFKA_OFFSETS_TOPIC_REPLICATION_FACTOR: 1
+    restart: unless-stopped
+
+  # ---- Nginx Reverse Proxy ----
+  nginx:
+    image: nginx:alpine
+    container_name: ll-nginx
+    ports:
+      - "80:80"
+    volumes:
+      - ./nginx.conf:/etc/nginx/nginx.conf:ro
+    depends_on:
+      - backend
+      - frontend
+    restart: unless-stopped
+
+volumes:
+  ll_postgres_data:
+  ll_redis_data:

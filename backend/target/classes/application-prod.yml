@@ -1,0 +1,44 @@
+# =====================================================
+# Production Profile
+# =====================================================
+
+spring:
+  config:
+    activate:
+      on-profile: prod
+
+  datasource:
+    url: ${DATABASE_URL}
+    username: ${DATABASE_USERNAME}
+    password: ${DATABASE_PASSWORD}
+
+  data:
+    redis:
+      host: ${REDIS_HOST:redis}
+      port: ${REDIS_PORT:6379}
+      password: ${REDIS_PASSWORD:}
+
+  kafka:
+    bootstrap-servers: ${KAFKA_BOOTSTRAP_SERVERS:kafka:9092}
+
+  ai:
+    openai:
+      api-key: ${OPENAI_API_KEY}
+      chat:
+        options:
+          model: gpt-4o
+          temperature: 0.2
+
+  jpa:
+    show-sql: false
+
+# Enable Kafka in production
+legacylifter:
+  events:
+    use-kafka: true
+
+logging:
+  level:
+    com.legacylifter: INFO
+    org.springframework: WARN
+    org.hibernate: WARN
