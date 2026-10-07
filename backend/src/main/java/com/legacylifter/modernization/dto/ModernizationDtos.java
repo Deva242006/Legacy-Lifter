@@ -1,5 +1,6 @@
 package com.legacylifter.modernization.dto;
 
+import com.legacylifter.common.entity.AnalysisRun;
 import com.legacylifter.common.entity.ModernizationRun;
 import com.legacylifter.common.entity.ModernizationSuggestion;
 
@@ -55,7 +56,7 @@ public class ModernizationDtos {
                     s.getModernizedCode(),
                     s.getExplanation(),
                     s.getConfidenceScore(),
-                    s.getRiskLevel(),
+                    s.getRiskLevel() != null ? s.getRiskLevel().name() : "MEDIUM",
                     s.isApplied()
             );
         }

@@ -25,7 +25,7 @@ public class ScoringDtos {
             return new DebtScoreResponse(
                     s.getId(),
                     s.getProject().getId(),
-                    s.getAnalysisRun().getId(),
+                    s.getAnalysisRunId(),
                     s.getOverallScore(),
                     s.getMaintainabilityScore(),
                     s.getSecurityScore(),

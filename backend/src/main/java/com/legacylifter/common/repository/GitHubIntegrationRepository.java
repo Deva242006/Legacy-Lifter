@@ -9,5 +9,7 @@ import java.util.UUID;
 
 @Repository
 public interface GitHubIntegrationRepository extends JpaRepository<GitHubIntegration, UUID> {
+    List<GitHubIntegration> findByProjectId(UUID projectId);
+
     List<GitHubIntegration> findByProjectIdOrderByCreatedAtDesc(UUID projectId);
 }

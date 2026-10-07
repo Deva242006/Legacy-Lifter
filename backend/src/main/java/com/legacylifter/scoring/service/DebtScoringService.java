@@ -74,12 +74,12 @@ public class DebtScoringService {
 
         DebtScore score = new DebtScore();
         score.setProject(project);
-        score.setAnalysisRun(run);
-        score.setOverallScore(overallScore);
-        score.setMaintainabilityScore(Math.round(maintainability * 10.0) / 10.0);
-        score.setSecurityScore(Math.round(security * 10.0) / 10.0);
-        score.setPerformanceScore(Math.round(performance * 10.0) / 10.0);
-        score.setModernityScore(Math.round(modernity * 10.0) / 10.0);
+        score.setAnalysisRunId(analysisRunId);
+        score.setOverallScore((float) overallScore);
+        score.setMaintainabilityScore((float) (Math.round(maintainability * 10.0) / 10.0));
+        score.setSecurityScore((float) (Math.round(security * 10.0) / 10.0));
+        score.setPerformanceScore((float) (Math.round(performance * 10.0) / 10.0));
+        score.setModernityScore((float) (Math.round(modernity * 10.0) / 10.0));
         score.setCalculatedAt(Instant.now());
 
         Map<String, Object> breakdown = new HashMap<>();
@@ -92,7 +92,7 @@ public class DebtScoringService {
         // Record historical trend data point for charts
         ScoreTrend trend = new ScoreTrend();
         trend.setProject(project);
-        trend.setOverallScore(overallScore);
+        trend.setOverallScore((float) overallScore);
         trend.setMaintainability(score.getMaintainabilityScore());
         trend.setSecurity(score.getSecurityScore());
         trend.setPerformance(score.getPerformanceScore());
@@ -100,7 +100,7 @@ public class DebtScoringService {
         trend.setRecordedAt(Instant.now());
         scoreTrendRepository.save(trend);
 
-        eventPublisher.publish(new ScoreCalculatedEvent(projectId, saved.getId(), overallScore, calculateGrade(overallScore)));
+        eventPublisher.publish(new ScoreCalculatedEvent(projectId, (float) overallScore, calculateGrade(overallScore)));
 
         log.info("Calculated tech debt score for project {}: {} (Grade: {})", projectId, overallScore, calculateGrade(overallScore));
         return saved;

@@ -87,8 +87,8 @@ public class ModernizationOrchestrator {
             suggestion.setOriginalCode(issue.getOriginalCode() != null ? issue.getOriginalCode() : issue.getDescription());
             suggestion.setModernizedCode(result.modernizedCode());
             suggestion.setExplanation(result.explanation());
-            suggestion.setConfidenceScore(result.confidenceScore());
-            suggestion.setRiskLevel(result.riskLevel());
+            suggestion.setConfidenceScore((float) result.confidenceScore());
+            suggestion.setRiskLevel(ModernizationSuggestion.RiskLevel.valueOf(result.riskLevel().toUpperCase()));
             suggestion.setApplied(false);
 
             suggestions.add(suggestion);

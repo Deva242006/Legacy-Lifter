@@ -12,6 +12,8 @@ import java.util.UUID;
 @Repository
 public interface CodeIssueRepository extends JpaRepository<CodeIssue, UUID> {
 
+    java.util.List<CodeIssue> findByAnalysisRunId(UUID analysisRunId);
+
     Page<CodeIssue> findByAnalysisRunId(UUID analysisRunId, Pageable pageable);
 
     Page<CodeIssue> findByAnalysisRunIdAndCategory(UUID analysisRunId,

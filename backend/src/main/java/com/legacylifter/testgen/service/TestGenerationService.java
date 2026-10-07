@@ -63,13 +63,13 @@ public class TestGenerationService {
 
             GeneratedTest test = new GeneratedTest();
             test.setProject(project);
-            test.setModernizationRun(suggestion.getModernizationRun());
+            test.setModernizationRunId(suggestion.getModernizationRun().getId());
             test.setTargetClass(className);
             test.setTargetMethod("modernizedMethod");
             test.setTestCode(testCode);
             test.setTestFramework("JUnit 5 + AssertJ");
-            test.setCoverageEstimate(0.92);
-            test.setMutationScore(mutationScore);
+            test.setCoverageEstimate((float) 0.92);
+            test.setMutationScore((float) mutationScore);
             test.setGeneratedAt(Instant.now());
 
             generatedTests.add(test);
@@ -81,8 +81,8 @@ public class TestGenerationService {
                 projectId,
                 modernizationRunId,
                 savedTests.size(),
-                0.92,
-                0.88
+                (float) 0.92,
+                (float) 0.88
         ));
 
         log.info("Successfully generated {} unit tests for project {}", savedTests.size(), projectId);

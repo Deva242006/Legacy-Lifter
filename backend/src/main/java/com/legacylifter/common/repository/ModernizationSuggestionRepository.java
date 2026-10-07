@@ -12,6 +12,8 @@ import java.util.UUID;
 @Repository
 public interface ModernizationSuggestionRepository extends JpaRepository<ModernizationSuggestion, UUID> {
 
+    List<ModernizationSuggestion> findByModernizationRunId(UUID runId);
+
     Page<ModernizationSuggestion> findByModernizationRunId(UUID runId, Pageable pageable);
 
     List<ModernizationSuggestion> findByModernizationRunIdAndRiskLevel(
