@@ -79,9 +79,7 @@ public class TestGenerationService {
 
         eventPublisher.publish(new TestsGeneratedEvent(
                 projectId,
-                modernizationRunId,
                 savedTests.size(),
-                (float) 0.92,
                 (float) 0.88
         ));
 
