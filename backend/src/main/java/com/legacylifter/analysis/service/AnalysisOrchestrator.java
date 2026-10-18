@@ -19,7 +19,6 @@ import org.springframework.scheduling.annotation.Async;
 import org.springframework.stereotype.Service;
 import org.springframework.transaction.annotation.Transactional;
 
-import java.io.File;
 import java.io.IOException;
 import java.nio.file.Files;
 import java.nio.file.Path;
@@ -35,6 +34,10 @@ import java.util.stream.Stream;
  * Orchestrates deep static analysis on uploaded Java projects.
  *
  * <p>Uses Java 21 Virtual Threads to analyze files concurrently with JavaParser AST detectors.</p>
+ *
+ * <p>Pattern: {@link #runAnalysis} creates a PENDING {@link AnalysisRun} synchronously and returns
+ * it immediately to the caller, then delegates the heavy lifting to {@link #executeAnalysisAsync}
+ * which runs on a virtual-thread executor pool without blocking the HTTP response thread.</p>
  */
 @Service
 public class AnalysisOrchestrator {
@@ -66,41 +69,71 @@ public class AnalysisOrchestrator {
     }
 
     /**
-     * Executes analysis asynchronously on virtual threads.
+     * Creates a PENDING {@link AnalysisRun}, persists it, and immediately returns it to the
+     * controller. The actual AST analysis is fired asynchronously via {@link #executeAnalysisAsync}.
+     *
+     * @param projectId    the project to analyse
+     * @param sourceDirPath filesystem path of the Java source root
+     * @return the newly-created, PENDING {@link AnalysisRun}
      */
-    @Async("applicationTaskExecutor")
     @Transactional
     public AnalysisRun runAnalysis(UUID projectId, String sourceDirPath) {
-        log.info("Starting virtual thread static analysis for project ID: {} at path: {}", projectId, sourceDirPath);
+        log.info("Initiating static analysis for project ID: {} at path: {}", projectId, sourceDirPath);
 
         Project project = projectRepository.findById(projectId)
                 .orElseThrow(() -> LegacyLifterException.notFound("Project", projectId));
 
+        // Validate path before creating the run record
+        Path rootPath = Paths.get(sourceDirPath);
+        if (!Files.exists(rootPath)) {
+            throw LegacyLifterException.badRequest("Source path does not exist: " + sourceDirPath);
+        }
+
+        // Create and persist a PENDING run — return this to the HTTP caller immediately
         AnalysisRun run = new AnalysisRun();
         run.setProject(project);
-        run.setStatus(AnalysisRun.RunStatus.RUNNING);
+        run.setStatus(AnalysisRun.RunStatus.PENDING);
         run.setStartedAt(Instant.now());
-        run = analysisRunRepository.save(run);
+        AnalysisRun savedRun = analysisRunRepository.save(run);
 
         project.setStatus(Project.ProjectStatus.ANALYZING);
         projectRepository.save(project);
 
-        Path rootPath = Paths.get(sourceDirPath);
-        if (!Files.exists(rootPath)) {
-            run.setStatus(AnalysisRun.RunStatus.FAILED);
-            run.setCompletedAt(Instant.now());
-            analysisRunRepository.save(run);
-            throw LegacyLifterException.badRequest("Source path does not exist: " + sourceDirPath);
+        // Fire the heavy processing asynchronously (does NOT block the HTTP response)
+        executeAnalysisAsync(projectId, savedRun.getId(), sourceDirPath);
+
+        return savedRun;
+    }
+
+    /**
+     * Performs the actual virtual-thread AST analysis. Runs asynchronously so the
+     * HTTP response for {@link #runAnalysis} is returned instantly.
+     */
+    @Async("applicationTaskExecutor")
+    @Transactional
+    public void executeAnalysisAsync(UUID projectId, UUID runId, String sourceDirPath) {
+        log.info("Starting virtual-thread AST analysis for project {} run {}", projectId, runId);
+
+        AnalysisRun run = analysisRunRepository.findById(runId)
+                .orElse(null);
+        if (run == null) {
+            log.error("AnalysisRun {} not found for async execution", runId);
+            return;
         }
 
+        run.setStatus(AnalysisRun.RunStatus.RUNNING);
+        analysisRunRepository.save(run);
+
+        Path rootPath = Paths.get(sourceDirPath);
         List<Path> javaFiles;
         try (Stream<Path> walk = Files.walk(rootPath)) {
             javaFiles = walk.filter(p -> p.toString().endsWith(".java")).collect(Collectors.toList());
         } catch (IOException e) {
             log.error("Failed to read directory {}: {}", sourceDirPath, e.getMessage());
             run.setStatus(AnalysisRun.RunStatus.FAILED);
+            run.setCompletedAt(Instant.now());
             analysisRunRepository.save(run);
-            throw LegacyLifterException.internalError("Error reading source files", e);
+            return;
         }
 
         run.setTotalFiles(javaFiles.size());
@@ -112,7 +145,7 @@ public class AnalysisOrchestrator {
 
         final AnalysisRun finalRun = run;
 
-        // Execute parsing concurrently with Java 21 Virtual Threads
+        // Execute parsing concurrently with Java 21 Virtual Threads (JEP 444)
         try (var executor = Executors.newVirtualThreadPerTaskExecutor()) {
             for (Path file : javaFiles) {
                 executor.submit(() -> {
@@ -124,7 +157,6 @@ public class AnalysisOrchestrator {
                             for (CodeIssue issue : issues) {
                                 issue.setAnalysisRun(finalRun);
                                 collectedIssues.add(issue);
-
                                 categoryCounts.merge(issue.getCategory(), 1, Integer::sum);
                                 severityCounts.merge(issue.getSeverity(), 1, Integer::sum);
                             }
@@ -134,9 +166,9 @@ public class AnalysisOrchestrator {
                     }
                 });
             }
-        }
+        } // Virtual thread executor is auto-closed here, awaiting all submitted tasks
 
-        // Save all detected issues
+        // Save all detected issues in a batch
         codeIssueRepository.saveAll(collectedIssues);
 
         run.setFilesAnalyzed(javaFiles.size());
@@ -151,10 +183,11 @@ public class AnalysisOrchestrator {
 
         AnalysisRun completedRun = analysisRunRepository.save(run);
 
+        Project project = completedRun.getProject();
         project.setStatus(Project.ProjectStatus.ANALYZED);
         projectRepository.save(project);
 
-        // Publish analysis completed event for tech debt scoring engine & WebSocket updates
+        // Publish domain event → triggers debt scoring + modernization pipeline
         long durationMs = System.currentTimeMillis() - run.getStartedAt().toEpochMilli();
         eventPublisher.publish(new AnalysisCompletedEvent(
                 projectId,
@@ -164,14 +197,15 @@ public class AnalysisOrchestrator {
                 durationMs
         ));
 
-        // Push real-time WS update
+        // Push real-time WebSocket notification to subscribed dashboard clients
         messagingTemplate.convertAndSend("/topic/projects/" + projectId + "/analysis", Map.of(
                 "status", "COMPLETED",
-                "runId", completedRun.getId(),
-                "totalIssues", completedRun.getIssuesFound()
+                "runId", completedRun.getId().toString(),
+                "totalIssues", completedRun.getIssuesFound(),
+                "totalFiles", completedRun.getFilesAnalyzed()
         ));
 
-        log.info("Completed analysis for project {}: {} issues found across {} files", projectId, collectedIssues.size(), javaFiles.size());
-        return completedRun;
+        log.info("Completed analysis for project {}: {} issues found across {} files in {}ms",
+                projectId, collectedIssues.size(), javaFiles.size(), durationMs);
     }
 }

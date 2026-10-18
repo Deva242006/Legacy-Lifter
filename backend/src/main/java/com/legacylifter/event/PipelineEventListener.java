@@ -38,7 +38,7 @@ public class PipelineEventListener {
         // 1. Compute technical debt score
         debtScoringService.calculateScore(event.projectId(), event.analysisRunId());
 
-        // 2. Trigger AI modernization pipeline
+        // 2. Trigger AI modernization pipeline (creates PENDING run + fires async processing)
         modernizationOrchestrator.runModernization(event.projectId(), event.analysisRunId());
     }
 
