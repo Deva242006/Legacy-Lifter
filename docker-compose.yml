@@ -6,14 +6,14 @@ services:
     container_name: legacylifter-postgres
     environment:
       POSTGRES_DB: legacylifter
-      POSTGRES_USER: postgres
-      POSTGRES_PASSWORD: postgrespassword
+      POSTGRES_USER: legacylifter
+      POSTGRES_PASSWORD: legacylifter_dev
     ports:
       - "5432:5432"
     volumes:
       - postgres_data:/var/lib/postgresql/data
     healthcheck:
-      test: ["CMD-SHELL", "pg_isready -U postgres"]
+      test: ["CMD-SHELL", "pg_isready -U legacylifter"]
       interval: 5s
       timeout: 5s
       retries: 5
@@ -60,8 +60,8 @@ services:
     environment:
       SPRING_PROFILES_ACTIVE: dev
       DATABASE_URL: jdbc:postgresql://postgres:5432/legacylifter
-      DATABASE_USERNAME: postgres
-      DATABASE_PASSWORD: postgrespassword
+      DATABASE_USERNAME: legacylifter
+      DATABASE_PASSWORD: legacylifter_dev
       REDIS_HOST: redis
       KAFKA_BOOTSTRAP_SERVERS: kafka:29092
     depends_on:
