@@ -20,4 +20,6 @@ public interface ModernizationSuggestionRepository extends JpaRepository<Moderni
             UUID runId, ModernizationSuggestion.RiskLevel riskLevel);
 
     long countByModernizationRunIdAndApplied(UUID runId, boolean applied);
+
+    long countByAppliedTrue();
 }

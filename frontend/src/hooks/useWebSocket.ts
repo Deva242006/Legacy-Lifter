@@ -1,65 +1,48 @@
 import { useEffect, useRef, useCallback } from 'react';
-import type { WebSocketMessage } from '../types';
-
-const WS_BASE = import.meta.env.VITE_WS_URL ?? 'ws://localhost:8080/ws';
-
-type MessageHandler = (msg: WebSocketMessage) => void;
 
 /**
- * useWebSocket – connects to the Spring Boot STOMP/raw WebSocket endpoint
- * and calls `onMessage` whenever a message arrives for the given projectId.
+ * useAnalysisPolling – polls the analysis status endpoint every `intervalMs`
+ * and calls `onUpdate` when it detects a status change (COMPLETED / FAILED).
  *
- * Connection is automatically cleaned up when the component unmounts.
+ * This replaces the raw-WebSocket hook which is incompatible with the Spring
+ * Boot STOMP endpoint without a dedicated STOMP client library.
  */
-export function useWebSocket(projectId: string | undefined, onMessage: MessageHandler) {
-  const wsRef = useRef<WebSocket | null>(null);
-  const reconnectRef = useRef<ReturnType<typeof setTimeout>>();
+export function useWebSocket(
+  projectId: string | undefined,
+  onMessage: (msg: { type: string; payload: Record<string, unknown> }) => void
+) {
+  const intervalRef = useRef<ReturnType<typeof setInterval>>();
+  const lastStatusRef = useRef<string>('');
 
-  const connect = useCallback(() => {
+  const startPolling = useCallback(() => {
     if (!projectId) return;
 
-    const url = `${WS_BASE}/projects/${projectId}`;
-    const ws = new WebSocket(url);
-    wsRef.current = ws;
-
-    ws.onopen = () => {
-      console.debug('[WS] connected to', url);
-    };
-
-    ws.onmessage = (event) => {
+    intervalRef.current = setInterval(async () => {
       try {
-        const data: WebSocketMessage = JSON.parse(event.data);
-        onMessage(data);
+        const res = await fetch(`/api/v1/projects/${projectId}/analysis`);
+        if (!res.ok) return;
+        const json = await res.json();
+        const status: string = json?.data?.status ?? '';
+        if (status && status !== lastStatusRef.current) {
+          lastStatusRef.current = status;
+          if (status === 'COMPLETED') {
+            onMessage({ type: 'ANALYSIS_COMPLETED', payload: json.data });
+          } else if (status === 'FAILED' || status === 'ERROR') {
+            onMessage({ type: 'ERROR', payload: { message: 'Analysis failed', ...json.data } });
+          } else if (status === 'RUNNING') {
+            onMessage({ type: 'ANALYSIS_PROGRESS', payload: json.data });
+          }
+        }
       } catch {
-        console.warn('[WS] could not parse message', event.data);
+        // network error — keep polling silently
       }
-    };
-
-    ws.onclose = (e) => {
-      if (!e.wasClean) {
-        // Reconnect after 3 s
-        reconnectRef.current = setTimeout(connect, 3000);
-      }
-    };
-
-    ws.onerror = (err) => {
-      console.error('[WS] error', err);
-    };
+    }, 3000);
   }, [projectId, onMessage]);
 
   useEffect(() => {
-    connect();
-    return () => {
-      clearTimeout(reconnectRef.current);
-      wsRef.current?.close(1000, 'component unmounted');
-    };
-  }, [connect]);
+    startPolling();
+    return () => clearInterval(intervalRef.current);
+  }, [startPolling]);
 
-  const send = useCallback((payload: object) => {
-    if (wsRef.current?.readyState === WebSocket.OPEN) {
-      wsRef.current.send(JSON.stringify(payload));
-    }
-  }, []);
-
-  return { send };
+  return { send: (_payload: object) => {} };
 }

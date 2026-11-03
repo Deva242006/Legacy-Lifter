@@ -29,4 +29,6 @@ public interface CodeIssueRepository extends JpaRepository<CodeIssue, UUID> {
 
     @Query("SELECT COUNT(i) FROM CodeIssue i WHERE i.analysisRun.id = :runId AND i.autoFixable = true")
     long countAutoFixableByRunId(UUID runId);
+
+    long countBySeverity(CodeIssue.IssueSeverity severity);
 }

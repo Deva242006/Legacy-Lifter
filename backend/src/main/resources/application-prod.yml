@@ -42,3 +42,8 @@ logging:
     com.legacylifter: INFO
     org.springframework: WARN
     org.hibernate: WARN
+
+# GitHub Integration
+github:
+  oauth:
+    token: ${GITHUB_OAUTH_TOKEN}
