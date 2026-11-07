@@ -212,3 +212,17 @@ export const getIntegrations = async (id: string): Promise<GitHubIntegration[]> 
   const res = await api.get(`/projects/${id}/github/integrations`);
   return res.data.data;
 };
+
+export const getDashboardOverview = async (): Promise<{
+  totalProjects: number;
+  totalAnalysisRuns: number;
+  totalIssuesFound: number;
+  totalCriticalIssues: number;
+  totalSuggestionsApplied: number;
+  totalPrsCreated: number;
+  averageDebtScore: number;
+}> => {
+  const res = await api.get('/dashboard/overview');
+  return res.data.data;
+};
+

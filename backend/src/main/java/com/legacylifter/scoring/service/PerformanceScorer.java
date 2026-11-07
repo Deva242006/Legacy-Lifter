@@ -13,7 +13,7 @@ import java.util.List;
  * Penalises:
  * - BLOCKING_IO in virtual-thread-hostile positions
  * - OLD_CONCURRENCY (platform threads, executor pools)
- * - STREAM_IMPROVEMENT misses (sub-optimal pipeline usage)
+ * - STREAM_IMPROVEMENTS misses (sub-optimal pipeline usage)
  * - OPTIONAL_MISUSE (unnecessary allocations / NPE risk)
  */
 @Component
@@ -35,12 +35,12 @@ public class PerformanceScorer {
 
         for (CodeIssue issue : issues) {
             penalty += switch (issue.getCategory()) {
-                case "BLOCKING_IO"          -> 9f;   // direct throughput impact
-                case "OLD_CONCURRENCY"      -> 7f;   // missed virtual-thread benefit
-                case "STREAM_IMPROVEMENT"   -> 3f;   // inefficient pipelines
-                case "OPTIONAL_MISUSE"      -> 2f;   // unnecessary object alloc
-                case "RAW_TYPES"            -> 1f;   // erased generics = missed JIT opts
-                default                     -> 0.5f;
+                case BLOCKING_IO          -> 9f;   // direct throughput impact
+                case OLD_CONCURRENCY      -> 7f;   // missed virtual-thread benefit
+                case STREAM_IMPROVEMENTS  -> 3f;   // inefficient pipelines
+                case OPTIONAL_MISUSE      -> 2f;   // unnecessary object alloc
+                case RAW_TYPES            -> 1f;   // erased generics = missed JIT opts
+                default                   -> 0.5f;
             };
         }
 
@@ -48,6 +48,6 @@ public class PerformanceScorer {
     }
 
     private float clamp(float v) {
-        return Math.max(0f, Math.min(100f, v));
+        return Math.max(0f, Math.min(100f, Math.round(v * 10f) / 10f));
     }
 }

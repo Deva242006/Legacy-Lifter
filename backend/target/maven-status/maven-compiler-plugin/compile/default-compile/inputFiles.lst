@@ -12,6 +12,7 @@ C:\Users\ELCOT\Desktop\A Projects\Legacy Lifter\backend\src\main\java\com\legacy
 C:\Users\ELCOT\Desktop\A Projects\Legacy Lifter\backend\src\main\java\com\legacylifter\analysis\dto\AnalysisDtos.java
 C:\Users\ELCOT\Desktop\A Projects\Legacy Lifter\backend\src\main\java\com\legacylifter\analysis\service\AnalysisOrchestrator.java
 C:\Users\ELCOT\Desktop\A Projects\Legacy Lifter\backend\src\main\java\com\legacylifter\analysis\service\SpoonTransformer.java
+C:\Users\ELCOT\Desktop\A Projects\Legacy Lifter\backend\src\main\java\com\legacylifter\common\controller\DashboardController.java
 C:\Users\ELCOT\Desktop\A Projects\Legacy Lifter\backend\src\main\java\com\legacylifter\common\controller\HealthController.java
 C:\Users\ELCOT\Desktop\A Projects\Legacy Lifter\backend\src\main\java\com\legacylifter\common\dto\ApiResponse.java
 C:\Users\ELCOT\Desktop\A Projects\Legacy Lifter\backend\src\main\java\com\legacylifter\common\entity\AnalysisRun.java
@@ -51,9 +52,11 @@ C:\Users\ELCOT\Desktop\A Projects\Legacy Lifter\backend\src\main\java\com\legacy
 C:\Users\ELCOT\Desktop\A Projects\Legacy Lifter\backend\src\main\java\com\legacylifter\event\ScoreCalculatedEvent.java
 C:\Users\ELCOT\Desktop\A Projects\Legacy Lifter\backend\src\main\java\com\legacylifter\event\TestsGeneratedEvent.java
 C:\Users\ELCOT\Desktop\A Projects\Legacy Lifter\backend\src\main\java\com\legacylifter\github\controller\GitHubController.java
+C:\Users\ELCOT\Desktop\A Projects\Legacy Lifter\backend\src\main\java\com\legacylifter\github\controller\WebhookController.java
 C:\Users\ELCOT\Desktop\A Projects\Legacy Lifter\backend\src\main\java\com\legacylifter\github\dto\GitHubDtos.java
 C:\Users\ELCOT\Desktop\A Projects\Legacy Lifter\backend\src\main\java\com\legacylifter\github\service\GitHubService.java
 C:\Users\ELCOT\Desktop\A Projects\Legacy Lifter\backend\src\main\java\com\legacylifter\github\service\PullRequestService.java
+C:\Users\ELCOT\Desktop\A Projects\Legacy Lifter\backend\src\main\java\com\legacylifter\github\service\WebhookProcessor.java
 C:\Users\ELCOT\Desktop\A Projects\Legacy Lifter\backend\src\main\java\com\legacylifter\LegacyLifterApplication.java
 C:\Users\ELCOT\Desktop\A Projects\Legacy Lifter\backend\src\main\java\com\legacylifter\modernization\controller\ModernizationController.java
 C:\Users\ELCOT\Desktop\A Projects\Legacy Lifter\backend\src\main\java\com\legacylifter\modernization\dto\ModernizationDtos.java
@@ -68,10 +71,17 @@ C:\Users\ELCOT\Desktop\A Projects\Legacy Lifter\backend\src\main\java\com\legacy
 C:\Users\ELCOT\Desktop\A Projects\Legacy Lifter\backend\src\main\java\com\legacylifter\modernization\strategy\StreamModernizationStrategy.java
 C:\Users\ELCOT\Desktop\A Projects\Legacy Lifter\backend\src\main\java\com\legacylifter\modernization\strategy\StructuredConcurrencyStrategy.java
 C:\Users\ELCOT\Desktop\A Projects\Legacy Lifter\backend\src\main\java\com\legacylifter\modernization\strategy\VirtualThreadStrategy.java
+C:\Users\ELCOT\Desktop\A Projects\Legacy Lifter\backend\src\main\java\com\legacylifter\observability\CustomMetrics.java
+C:\Users\ELCOT\Desktop\A Projects\Legacy Lifter\backend\src\main\java\com\legacylifter\observability\MetricsConfig.java
 C:\Users\ELCOT\Desktop\A Projects\Legacy Lifter\backend\src\main\java\com\legacylifter\scoring\controller\ScoringController.java
 C:\Users\ELCOT\Desktop\A Projects\Legacy Lifter\backend\src\main\java\com\legacylifter\scoring\dto\ScoringDtos.java
 C:\Users\ELCOT\Desktop\A Projects\Legacy Lifter\backend\src\main\java\com\legacylifter\scoring\service\DebtScoringService.java
+C:\Users\ELCOT\Desktop\A Projects\Legacy Lifter\backend\src\main\java\com\legacylifter\scoring\service\MaintainabilityScorer.java
+C:\Users\ELCOT\Desktop\A Projects\Legacy Lifter\backend\src\main\java\com\legacylifter\scoring\service\ModernityScorer.java
+C:\Users\ELCOT\Desktop\A Projects\Legacy Lifter\backend\src\main\java\com\legacylifter\scoring\service\PerformanceScorer.java
+C:\Users\ELCOT\Desktop\A Projects\Legacy Lifter\backend\src\main\java\com\legacylifter\scoring\service\SecurityScorer.java
 C:\Users\ELCOT\Desktop\A Projects\Legacy Lifter\backend\src\main\java\com\legacylifter\testgen\controller\TestGenController.java
 C:\Users\ELCOT\Desktop\A Projects\Legacy Lifter\backend\src\main\java\com\legacylifter\testgen\dto\TestGenDtos.java
 C:\Users\ELCOT\Desktop\A Projects\Legacy Lifter\backend\src\main\java\com\legacylifter\testgen\service\MutationTestRunner.java
 C:\Users\ELCOT\Desktop\A Projects\Legacy Lifter\backend\src\main\java\com\legacylifter\testgen\service\TestGenerationService.java
+C:\Users\ELCOT\Desktop\A Projects\Legacy Lifter\backend\src\main\java\com\legacylifter\testgen\service\TestQualityAnalyzer.java

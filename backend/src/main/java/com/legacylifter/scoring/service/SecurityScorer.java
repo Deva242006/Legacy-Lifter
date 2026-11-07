@@ -34,13 +34,13 @@ public class SecurityScorer {
 
         for (CodeIssue issue : issues) {
             penalty += switch (issue.getCategory()) {
-                case "BLOCKING_IO"       -> 8f;   // can starve thread pool
-                case "OLD_CONCURRENCY"   -> 10f;  // race / deadlock risk
+                case BLOCKING_IO       -> 8f;   // can starve thread pool
+                case OLD_CONCURRENCY   -> 10f;  // race / deadlock risk
                 default -> switch (issue.getSeverity()) {
-                    case "CRITICAL" -> 6f;
-                    case "HIGH"     -> 3f;
-                    case "MEDIUM"   -> 1f;
-                    default         -> 0.5f;
+                    case CRITICAL -> 6f;
+                    case HIGH     -> 3f;
+                    case MEDIUM   -> 1f;
+                    default       -> 0.5f;
                 };
             };
         }
@@ -51,6 +51,6 @@ public class SecurityScorer {
     }
 
     private float clamp(float v) {
-        return Math.max(0f, Math.min(100f, v));
+        return Math.max(0f, Math.min(100f, Math.round(v * 10f) / 10f));
     }
 }

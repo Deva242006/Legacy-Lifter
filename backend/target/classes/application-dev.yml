@@ -40,3 +40,10 @@ logging:
     com.legacylifter: DEBUG
     org.hibernate.SQL: DEBUG
     org.hibernate.type.descriptor.sql.BasicBinder: TRACE
+
+# =====================================================
+# GitHub Integration
+# =====================================================
+github:
+  oauth:
+    token: ${GITHUB_OAUTH_TOKEN:}

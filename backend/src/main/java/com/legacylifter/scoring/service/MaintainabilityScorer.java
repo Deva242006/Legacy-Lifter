@@ -41,22 +41,22 @@ public class MaintainabilityScorer {
 
         // Readability penalty: raw types + old switch = hard-to-read code
         long readabilityHits = issues.stream()
-                .filter(i -> "RAW_TYPES".equals(i.getCategory())
-                          || "OLD_SWITCH".equals(i.getCategory()))
+                .filter(i -> i.getCategory() == CodeIssue.IssueCategory.RAW_TYPES
+                          || i.getCategory() == CodeIssue.IssueCategory.OLD_SWITCH)
                 .count();
         float readabilityPenalty = Math.min(30f, readabilityHits * 3f);
 
         // Clustering penalty: files with more than 5 issues each
         Map<String, Long> perFile = issues.stream()
                 .collect(Collectors.groupingBy(CodeIssue::getFilePath, Collectors.counting()));
-        long clusteredFiles = perFile.values().stream().filter(c -> c > 5).count();
-        float clusterPenalty = Math.min(20f, clusteredFiles * 5f);
+        long clutteredFiles = perFile.values().stream().filter(cnt -> cnt > 5).count();
+        float clusteringPenalty = Math.min(20f, clutteredFiles * 4f);
 
-        float raw = densityScore - readabilityPenalty - clusterPenalty;
-        return clamp(raw);
+        float finalScore = densityScore - readabilityPenalty - clusteringPenalty;
+        return clamp(finalScore);
     }
 
     private float clamp(float v) {
-        return Math.max(0f, Math.min(100f, v));
+        return Math.max(0f, Math.min(100f, Math.round(v * 10f) / 10f));
     }
 }

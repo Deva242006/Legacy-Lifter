@@ -13,23 +13,23 @@ import java.util.Set;
  *
  * Rewards code that already uses modern Java 17-21 idioms.
  * Penalises every pattern that has a direct Java-21 replacement:
- * - MISSING_RECORD     → should use records
- * - MISSING_SEALED     → should use sealed classes
- * - OLD_SWITCH         → should use pattern-matching switch
- * - ANONYMOUS_CLASS    → should use lambdas
- * - RAW_TYPES          → should use generics
- * - STREAM_IMPROVEMENT → should use modern Stream APIs
+ * - MISSING_RECORDS        → should use records
+ * - MISSING_SEALED_CLASSES → should use sealed classes
+ * - OLD_SWITCH            → should use pattern-matching switch
+ * - ANONYMOUS_CLASSES     → should use lambdas
+ * - RAW_TYPES             → should use generics
+ * - STREAM_IMPROVEMENTS   → should use modern Stream APIs
  */
 @Component
 public class ModernityScorer {
 
-    private static final Set<String> MODERNITY_CATEGORIES = Set.of(
-            "MISSING_RECORD",
-            "MISSING_SEALED",
-            "OLD_SWITCH",
-            "ANONYMOUS_CLASS",
-            "RAW_TYPES",
-            "STREAM_IMPROVEMENT"
+    private static final Set<CodeIssue.IssueCategory> MODERNITY_CATEGORIES = Set.of(
+            CodeIssue.IssueCategory.MISSING_RECORDS,
+            CodeIssue.IssueCategory.MISSING_SEALED_CLASSES,
+            CodeIssue.IssueCategory.OLD_SWITCH,
+            CodeIssue.IssueCategory.ANONYMOUS_CLASSES,
+            CodeIssue.IssueCategory.RAW_TYPES,
+            CodeIssue.IssueCategory.STREAM_IMPROVEMENTS
     );
 
     private final CodeIssueRepository issueRepository;
@@ -48,12 +48,13 @@ public class ModernityScorer {
                 .filter(i -> MODERNITY_CATEGORIES.contains(i.getCategory()))
                 .count();
 
-        // Each modernity issue costs 5 points, capped at 100
-        float penalty = Math.min(modernityIssues * 5f, 100f);
+        float penaltyPerIssue = 4f;
+        float penalty = Math.min(100f, modernityIssues * penaltyPerIssue);
+
         return clamp(100f - penalty);
     }
 
     private float clamp(float v) {
-        return Math.max(0f, Math.min(100f, v));
+        return Math.max(0f, Math.min(100f, Math.round(v * 10f) / 10f));
     }
 }
